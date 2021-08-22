@@ -1,0 +1,4 @@
+#ifndef FOODCONTROLLER_H
+#define FOODCONTROLLER_H
+
+#endif // FOODCONTROLLER_H
