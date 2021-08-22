@@ -19,7 +19,8 @@ UnexpectedEventException::UnexpectedEventException()
 Controller::Controller(IPort& p_displayPort, IPort& p_foodPort, IPort& p_scorePort, std::string const& p_config)
     : m_displayPort(p_displayPort),
       m_foodPort(p_foodPort),
-      m_scorePort(p_scorePort)
+      m_scorePort(p_scorePort),
+      m_pause(false)
 {
     std::istringstream istr(p_config);
     char w, f, s, d;
@@ -66,7 +67,8 @@ Controller::Controller(IPort& p_displayPort, IPort& p_foodPort, IPort& p_scorePo
 void Controller::handleTimePassed(const TimeoutInd&)
 {
     Segment newHead = getNewHead();
-
+    if(m_pause = true)
+        return;
     if(doesCollideWithSnake(newHead))
     {
         notifyAboutFailure();
@@ -150,6 +152,11 @@ void Controller::handleNewFood(const FoodResp& requestedFood)
     m_foodPosition = std::make_pair(requestedFood.x, requestedFood.y);
 }
 
+void Controller::handlePause()
+{
+    m_pause = not m_pause;
+}
+
 bool Controller::doesCollideWithSnake(const Controller::Segment &newSegment) const
 {
     for (auto segment : m_segments) {
@@ -221,6 +228,7 @@ void Controller::receive(std::unique_ptr<Event> e)
         case DirectionInd::MESSAGE_ID: return handleDirectionChange(*static_cast<EventT<DirectionInd> const&>(*e));
         case FoodInd::MESSAGE_ID: return handleFoodPositionChange(*static_cast<EventT<FoodInd> const&>(*e));
         case FoodResp::MESSAGE_ID: return handleNewFood(*static_cast<EventT<FoodResp> const&>(*e));
+        case PauseInd::MESSAGE_ID: return handlePause();
         default: throw UnexpectedEventException();
     };
 }
